@@ -716,15 +716,27 @@ function setFit(mode){
 // ─────────────────────────────────────────────
 function writeTile(pxArray){
   var t=getT(),cols=getCols(),col=selTileIdx%cols,row=Math.floor(selTileIdx/cols);
+  // Update decoded pixel buffer
   for(var py=0;py<TILE;py++) for(var px=0;px<TILE;px++){
     var dst=((row*TILE+py)*t.totalX+(col*TILE+px))*4,src=(py*TILE+px)*4;
     pixels[activeTab][dst]=pxArray[src];pixels[activeTab][dst+1]=pxArray[src+1];
     pixels[activeTab][dst+2]=pxArray[src+2];pixels[activeTab][dst+3]=pxArray[src+3];
   }
-  // Re-encode DXT1 back into sprData
-  var t2=getT();
-  t2.rawData=encodeDXT1(pixels[activeTab],t2.totalX,t2.totalY);
-  t2.dataSize=t2.rawData.length;
+  // Encode ONLY this 64x64 tile and patch it into rawData
+  // This preserves all other tiles (especially blank blocks) untouched
+  var tilePixels=new Uint8Array(TILE*TILE*4);
+  for(var py=0;py<TILE;py++) for(var px=0;px<TILE;px++){
+    var src2=((row*TILE+py)*t.totalX+(col*TILE+px))*4,dst2=(py*TILE+px)*4;
+    tilePixels[dst2]=pixels[activeTab][src2];tilePixels[dst2+1]=pixels[activeTab][src2+1];
+    tilePixels[dst2+2]=pixels[activeTab][src2+2];tilePixels[dst2+3]=pixels[activeTab][src2+3];
+  }
+  var encodedTile=encodeDXT1(tilePixels,TILE,TILE); // encode just 64x64
+  var blocksPerAtlasRow=t.totalX/4;
+  for(var by=0;by<16;by++) for(var bx=0;bx<16;bx++){
+    var rawOff=((row*16+by)*blocksPerAtlasRow+(col*16+bx))*8;
+    var srcOff=(by*16+bx)*8;
+    for(var k=0;k<8;k++) t.rawData[rawOff+k]=encodedTile[srcOff+k];
+  }
   anyModified=true;
   renderAtlas(); refreshOldPreview(); updateSPRStatus(); updateButtons();
 }
