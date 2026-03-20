@@ -1,6 +1,8 @@
 # RF Emblem Editor
 RF Emblem Editor is a tool to edit guild emblems in the game RF Online, developed with Claude AI.
 
+Use the tool here: https://josemumuchan.github.io/rfemblemeditor/
+
 # Usage:
 1. Select emblem.spr to load
 2. Choose which icon to "CLEAR" or "REPLACE", Atlas 1 = guild emblem background, Atlas 2 = guild emblem icon
